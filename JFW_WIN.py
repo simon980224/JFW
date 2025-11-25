@@ -275,7 +275,7 @@ loading_xpath2 = "/html/body/div[2]/div/i"
 
 # 等待用户名、密码、验证码输入框可见且可点击
 username = WebDriverWait(driver, 180).until(
-    EC.element_to_be_clickable((By.XPATH, '//*[@id="app"]/div/div/div/form/div[2]/div[2]/div/div/input'))
+    EC.element_to_be_clickable((By.XPATH, '//input[@placeholder="請輸入帳號"]'))
 )
 username.click()
 time.sleep(0.5)  # 稍微等待
@@ -284,7 +284,7 @@ username.send_keys(username_text)
 
 
 password = WebDriverWait(driver, 180).until(
-    EC.element_to_be_clickable((By.XPATH, '//*[@id="app"]/div/div/div/form/div[2]/div[4]/div/div[1]/input'))
+    EC.element_to_be_clickable((By.XPATH, '//input[@placeholder="請輸入密碼"]'))
 )
 password.click()
 time.sleep(0.5)  # 稍微等待
