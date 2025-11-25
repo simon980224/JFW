@@ -108,9 +108,21 @@ def main():
     
     # 打包成功
     print_header("打包完成！")
-    print("✓ 可執行檔位置: dist\\JFW_WIN.exe")
+    
+    # 複製 accounts.txt 到 dist 資料夾
+    if os.path.exists("accounts.txt"):
+        try:
+            shutil.copy2("accounts.txt", "dist/accounts.txt")
+            print("✓ 已複製 accounts.txt 到 dist 資料夾")
+        except Exception as e:
+            print(f"⚠ 複製 accounts.txt 失敗: {e}")
+    else:
+        print("⚠ 找不到 accounts.txt 檔案")
+    
+    print("\n✓ 可執行檔位置: dist/JFW_WIN.exe")
+    print("✓ 帳號檔案位置: dist/accounts.txt")
     print("\n提醒:")
-    print("  • 請確保 accounts.txt 與 JFW_WIN.exe 放在同一目錄")
+    print("  • dist 資料夾中已包含所有需要的檔案")
     print("  • 首次執行時會自動下載 ChromeDriver")
     print()
     
