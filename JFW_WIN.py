@@ -301,7 +301,7 @@ password.send_keys(password_text)
 # code.send_keys(code_text)
 
 login = WebDriverWait(driver, 180).until(
-    EC.element_to_be_clickable((By.XPATH, '//*[@id="app"]/div/div/div/form/div[2]/button'))
+    EC.element_to_be_clickable((By.XPATH, '//button[contains(@class, "login-btn")]'))
 )
 login.click()
 
