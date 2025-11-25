@@ -775,24 +775,16 @@ while deep:
             break
 
     print("\033[1;33m所有會員任務完成！\033[0m")
-    print("\033[1;33m輸入任意鍵退出\033[0m")
-    req = input("\033[1;33m或按下 ENTER 鍵 繼續使用\033[0m\n")
-    if req == "":
-        deep = True
-        # 设置目标金额
-
-        num_space = True
-        while num_space:
-            user_input = input(Fore.LIGHTYELLOW_EX + "請輸入目標金額: \n" + Style.RESET_ALL)
-            if user_input.isdigit():  # 检查输入是否为数字
-                num = int(user_input)  # 转换为整数
-                num_space = False  # 如果输入有效，退出循环
-            else:
-                print("")
-                print(Fore.RED + "輸入無效，請確保輸入的是數字！\n" + Style.RESET_ALL)
-
-    else:
-        deep = False
-        print("\033[1;33m準備退出腳本\033[0m")
-        time.sleep(2)
-        sys.exit() #终止程序
+    print("\033[1;33m正在關閉瀏覽器...\033[0m")
+    
+    # 關閉瀏覽器
+    try:
+        driver.quit()
+        log_success("瀏覽器已關閉")
+    except Exception as e:
+        log_error(f"關閉瀏覽器時發生錯誤: {e}")
+    
+    deep = False
+    print("\033[1;33m腳本執行完畢\033[0m")
+    input("按 Enter 結束...")
+    sys.exit()
