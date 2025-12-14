@@ -39,7 +39,7 @@ used_accounts = set()
 
 def load_accounts():
     """
-    加载账号信息 (账号, 密码, 验证码)
+    加载账号信息 (账号, 密码)
     """
     global accounts
     accounts = []
@@ -62,10 +62,9 @@ def load_accounts():
                 # 統一逗號格式並分割
                 parts = line.replace('，', ',').split(',')
 
-                if len(parts) == 3:
-                    account, password, code = map(str.strip, parts)
+                if len(parts) == 2:
+                    account, password = map(str.strip, parts)
 
-                    # 驗證每個欄位是否為合法英數字
                     valid = True
                     if not pattern.match(account):
                         invalid_entries.append(f"\033[31m第 {line_number} 行 - 無效帳號: {account}\033[0m")
@@ -73,15 +72,14 @@ def load_accounts():
                     if not pattern.match(password):
                         invalid_entries.append(f"\033[31m第 {line_number} 行 - 無效密碼: {password}\033[0m")
                         valid = False
-                    if not pattern.match(code):
-                        invalid_entries.append(f"\033[31m第 {line_number} 行 - 無效驗證碼: {code}\033[0m")
-                        valid = False
 
                     if valid:
-                        accounts.append((account, password, code))
+                        accounts.append((account, password))
 
                 else:
-                    invalid_entries.append(f"\033[31m第 {line_number} 行 - 格式錯誤，應為「帳號,密碼,驗證碼」: {line}\033[0m")
+                    invalid_entries.append(
+                        f"\033[31m第 {line_number} 行 - 格式錯誤，應為「帳號,密碼」: {line}\033[0m"
+                    )
 
     except Exception as e:
         print(f"\033[31m錯誤：讀取帳號文件失敗：{e}\033[0m")
@@ -574,11 +572,6 @@ while deep:
                             log_warning(f"{account_name} ，上分失败，已尝试多次")
 
 
-
-
-
-
-
                         # **等待 "数据加载中" 消失**
                         WebDriverWait(driver, 180).until_not(
                             EC.presence_of_element_located((By.XPATH, loading_xpath))
@@ -630,7 +623,6 @@ while deep:
 
                         processed = True
                         break
-
 
 
                     #**处理扣分**
