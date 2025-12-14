@@ -253,7 +253,7 @@ def safe_click(driver, by, locator, retries=3):
 
 
 def navigate_to_players(driver, loading_xpath, loading_xpath2):
-    """導航到直屬玩家頁面，返回 True 表示有資料，False 表示無資料"""
+    """導航到直屬玩家頁面"""
     log_info("正在跳轉到帳戶管理頁面...")
     driver.get("https://ad.jfw-win.com/#/agent/user-manage/agent-user")
 
@@ -284,29 +284,12 @@ def navigate_to_players(driver, loading_xpath, loading_xpath2):
     WebDriverWait(driver, 180).until_not(
         EC.presence_of_element_located((By.XPATH, loading_xpath))
     )
-    
-    time.sleep(2)
-    
-    # 檢查是否有「無內容」圖片
-    try:
-        no_content = driver.find_element(By.XPATH, '//img[contains(@src, "icon_no content")]')
-        if no_content:
-            log_warning("此帳號底下無會員資料，跳過處理")
-            return False
-    except:
-        pass  # 沒有找到無內容圖片，表示有資料
-    
-    # 檢查是否有分頁控制元素（有資料才會有）
-    try:
-        WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, '//*[@id="app-main"]/section/footer/div[2]/div/span[2]/div/div/span/span/i'))
-        )
-        time.sleep(1)
-        return True  # 有分頁元素，表示有資料
-    except:
-        log_warning("此帳號底下無會員資料，跳過處理")
-        return False
+
+    WebDriverWait(driver, 180).until(
+        EC.element_to_be_clickable(
+            (By.XPATH, '//*[@id="app-main"]/section/footer/div[2]/div/span[2]/div/div/span/span/i'))
+    )
+    time.sleep(1)
 
 
 def get_target_amount():
@@ -634,21 +617,12 @@ def process_single_account(username_text, password_text, num):
         
         driver = init_driver()
         loading_xpath, loading_xpath2 = login_to_system(driver, username_text, password_text)
+        navigate_to_players(driver, loading_xpath, loading_xpath2)
+        process_all_members(driver, num, loading_xpath)
         
-        # 導航到玩家頁面，檢查是否有資料
-        has_data = navigate_to_players(driver, loading_xpath, loading_xpath2)
-        
-        if has_data:
-            # 有資料才處理會員
-            process_all_members(driver, num, loading_xpath)
-            print(f"\n{'='*50}")
-            print(Fore.GREEN + f"帳號 {username_text} 處理完成！" + Style.RESET_ALL)
-            print(f"{'='*50}\n")
-        else:
-            # 無資料，直接跳過
-            print(f"\n{'='*50}")
-            print(Fore.YELLOW + f"帳號 {username_text} 無會員資料，已跳過" + Style.RESET_ALL)
-            print(f"{'='*50}\n")
+        print(f"\n{'='*50}")
+        print(Fore.GREEN + f"帳號 {username_text} 處理完成！" + Style.RESET_ALL)
+        print(f"{'='*50}\n")
         
     except Exception as e:
         log_error(f"處理帳號 {username_text} 時發生錯誤: {e}")
