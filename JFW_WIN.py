@@ -525,6 +525,7 @@ def process_all_members(driver, num, loading_xpath):
     page_size_50_checked = False
     switching_to_500 = False
     all_members_checked = False
+    processed_accounts = set()  # 記錄已處理過的帳號
 
     player = WebDriverWait(driver, 180).until(
         EC.element_to_be_clickable((By.XPATH, '//div[@role="tablist"]//div[@id="tab-gameUser"]'))
@@ -568,6 +569,11 @@ def process_all_members(driver, num, loading_xpath):
                 try:
                     account_name = account.text.strip()
 
+                    # 檢查是否已處理過此帳號
+                    if account_name in processed_accounts:
+                        log_info(f"{account_name} 已處理過，跳過")
+                        continue
+
                     agent_type_xpath = f'//*[@id="agent-bbox-id"]/div[2]/div/div[{idx}]/div[1]/div[2]/div[1]/div[2]'
                     agent_type_element = WebDriverWait(driver, 180).until(
                         EC.presence_of_element_located((By.XPATH, agent_type_xpath))
@@ -587,6 +593,8 @@ def process_all_members(driver, num, loading_xpath):
 
                     if member_balance == num:
                         skipped_accounts.add(account_name)
+                        processed_accounts.add(account_name)  # 記錄為已處理
+                        log_info(f"{account_name} 餘額已符合目標 {num}，標記為已處理")
                         continue
 
                     log_info(f"{account_name}，類型：『現金代理』，餘額: {member_balance}，開始處理")
@@ -602,6 +610,8 @@ def process_all_members(driver, num, loading_xpath):
                             log_info("滾動超時未結束")
 
                         process_member_add_balance(driver, account_name, member_balance, num, loading_xpath)
+                        processed_accounts.add(account_name)  # 記錄為已處理
+                        log_success(f"{account_name} 已完成上分並標記為已處理")
                         return_to_players_page(driver)
 
                         if switching_to_500:
@@ -621,6 +631,8 @@ def process_all_members(driver, num, loading_xpath):
                             log_info("滾動超時未結束")
 
                         process_member_deduct_balance(driver, account_name, member_balance, num, loading_xpath)
+                        processed_accounts.add(account_name)  # 記錄為已處理
+                        log_success(f"{account_name} 已完成扣分並標記為已處理")
                         return_to_players_page(driver)
 
                         if switching_to_500:
