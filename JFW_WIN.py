@@ -34,7 +34,7 @@ def load_accounts():
     """加载账号信息 (账号, 密码, 调整金额)"""
     accounts = []
     invalid_entries = []
-    accounts_file = os.path.join(base_dir, "accounts.txt")
+    accounts_file = os.path.join(base_dir, "用戶資訊.txt")
     pattern = re.compile(r"^[A-Za-z0-9]+$")
 
     try:
@@ -251,7 +251,7 @@ def safe_click(driver, by, locator, retries=3):
             return True
         except StaleElementReferenceException:
             print(f"⚠️ 第 {attempt+1} 次尝试点击失败，重新查找元素...")
-    print("❌ 无法点击元素，请检查网页状态。")
+    print("无法点击元素，请检查网页状态。")
     return False
 
 
@@ -699,7 +699,7 @@ def main():
     accounts = load_accounts()
     
     if not accounts:
-        print("帳號列表為空，請檢查 accounts.txt 是否有有效資料")
+        print("帳號列表為空，請檢查 用戶資訊.txt 是否有有效資料")
         input("按 Enter 結束...")
         sys.exit(1)
     
