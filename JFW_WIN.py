@@ -31,7 +31,7 @@ base_dir = get_base_dir()
 
 
 def load_accounts():
-    """加载账号信息 (账号, 密码)"""
+    """加载账号信息 (账号, 密码, 调整金额)"""
     accounts = []
     invalid_entries = []
     accounts_file = os.path.join(base_dir, "accounts.txt")
@@ -46,8 +46,8 @@ def load_accounts():
 
                 parts = line.replace('，', ',').split(',')
 
-                if len(parts) == 2:
-                    account, password = map(str.strip, parts)
+                if len(parts) == 3:
+                    account, password, amount = map(str.strip, parts)
                     valid = True
                     if not pattern.match(account):
                         invalid_entries.append(f"\033[31m第 {line_number} 行 - 無效帳號: {account}\033[0m")
@@ -55,11 +55,14 @@ def load_accounts():
                     if not pattern.match(password):
                         invalid_entries.append(f"\033[31m第 {line_number} 行 - 無效密碼: {password}\033[0m")
                         valid = False
+                    if not amount.isdigit():
+                        invalid_entries.append(f"\033[31m第 {line_number} 行 - 無效金額: {amount}\033[0m")
+                        valid = False
                     if valid:
-                        accounts.append((account, password))
+                        accounts.append((account, password, int(amount)))
                 else:
                     invalid_entries.append(
-                        f"\033[31m第 {line_number} 行 - 格式錯誤，應為「帳號,密碼」: {line}\033[0m"
+                        f"\033[31m第 {line_number} 行 - 格式錯誤，應為「帳號,密碼,調整金額」: {line}\033[0m"
                     )
 
     except Exception as e:
@@ -262,28 +265,65 @@ def navigate_to_players(driver, loading_xpath, loading_xpath2):
     )
     time.sleep(1)
 
+    # 等待第一層 loading 消失
     WebDriverWait(driver, 180).until(
         EC.invisibility_of_element_located((By.XPATH, loading_xpath))
     )
     WebDriverWait(driver, 180).until(
         EC.invisibility_of_element_located((By.XPATH, loading_xpath2))
     )
+    time.sleep(2)
+
+    # 等待 loading mask 完全消失
+    try:
+        WebDriverWait(driver, 10).until(
+            EC.invisibility_of_element_located((By.CLASS_NAME, "el-loading-mask"))
+        )
+    except:
+        pass
+    
     time.sleep(1)
 
+    # 確認元素可見
     element = WebDriverWait(driver, 180).until(
         EC.visibility_of_element_located((By.XPATH, '//div[@role="tablist"]//div[@id="tab-gameUser"]'))
     )
 
+    # 確認元素可點擊
     player = WebDriverWait(driver, 180).until(
         EC.element_to_be_clickable((By.XPATH, '//div[@role="tablist"]//div[@id="tab-gameUser"]'))
     )
+    
+    # 再次確認沒有 loading 遮罩
+    try:
+        WebDriverWait(driver, 5).until(
+            EC.invisibility_of_element_located((By.CLASS_NAME, "el-loading-mask"))
+        )
+    except:
+        pass
+    
     time.sleep(1)
     log_loading_light("點選[直屬玩家]\n")
-    player.click()
-
+    
+    # 使用 JavaScript 點擊，避免被遮擋
+    try:
+        player.click()
+    except:
+        # 如果普通點擊失敗，使用 JavaScript 強制點擊
+        driver.execute_script("arguments[0].click();", player)
+    
+    # 等待點擊後的 loading 消失
     WebDriverWait(driver, 180).until_not(
         EC.presence_of_element_located((By.XPATH, loading_xpath))
     )
+    
+    # 再次等待可能的 loading mask
+    try:
+        WebDriverWait(driver, 10).until(
+            EC.invisibility_of_element_located((By.CLASS_NAME, "el-loading-mask"))
+        )
+    except:
+        pass
     
     time.sleep(2)
     
@@ -309,18 +349,7 @@ def navigate_to_players(driver, loading_xpath, loading_xpath2):
         return False
 
 
-def get_target_amount():
-    """取得目標金額"""
-    num_space = True
-    while num_space:
-        user_input = input(Fore.LIGHTYELLOW_EX + "請輸入目標金額: \n" + Style.RESET_ALL)
-        if user_input.isdigit():
-            num = int(user_input)
-            num_space = False
-            return num
-        else:
-            print("")
-            print(Fore.RED + "輸入無效，請確保輸入的是數字！\n" + Style.RESET_ALL)
+
 
 
 def set_page_size_to_500(driver):
@@ -629,7 +658,7 @@ def process_single_account(username_text, password_text, num):
     driver = None
     try:
         print(f"\n{'='*50}")
-        print(Fore.YELLOW + f"開始處理帳號: {username_text}" + Style.RESET_ALL)
+        print(Fore.YELLOW + f"開始處理帳號: {username_text} | 目標金額: {num}" + Style.RESET_ALL)
         print(f"{'='*50}\n")
         
         driver = init_driver()
@@ -674,16 +703,12 @@ def main():
         input("按 Enter 結束...")
         sys.exit(1)
     
-    # 取得目標金額 (只問一次)
-    num = get_target_amount()
-    
     print(f"\n{'='*50}")
-    print(Fore.CYAN + f"目標金額: {num}" + Style.RESET_ALL)
     print(Fore.CYAN + f"共有 {len(accounts)} 個帳號待處理" + Style.RESET_ALL)
     print(f"{'='*50}\n")
     
     # 依序處理每個帳號
-    for index, (username_text, password_text) in enumerate(accounts, 1):
+    for index, (username_text, password_text, num) in enumerate(accounts, 1):
         print(Fore.MAGENTA + f"\n處理進度: {index}/{len(accounts)}" + Style.RESET_ALL)
         process_single_account(username_text, password_text, num)
         
